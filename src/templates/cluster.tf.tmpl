@@ -1,0 +1,110 @@
+{{define "tags"}}[{{- range $i, $e := .Tags }}{{if $i}}, {{end}}"{{$e}}"{{end}}]{{end -}}
+provider "scaleway" {
+  organization = "${var.organisation_id}"
+  token        = "${var.secret_token}"
+  region       = "${var.region}"
+}
+
+resource "scaleway_ip" "public_ip" {
+  count = {{ .NumberOfNodes }}
+}
+
+resource "scaleway_security_group" "http" {
+  name                    = "http"
+  description             = "allow HTTP and HTTPS traffic"
+  enable_default_security = true
+}
+
+resource "scaleway_security_group_rule" "http_accept" {
+  security_group = "${scaleway_security_group.http.id}"
+
+  action    = "accept"
+  direction = "inbound"
+  ip_range  = "0.0.0.0/0"
+  protocol  = "TCP"
+  port      = 80
+}
+
+resource "scaleway_security_group_rule" "https_accept" {
+  security_group = "${scaleway_security_group.http.id}"
+
+  action    = "accept"
+  direction = "inbound"
+  ip_range  = "0.0.0.0/0"
+  protocol  = "TCP"
+  port      = 443
+}
+
+resource "scaleway_security_group_rule" "etcd_healthcheck" {
+  security_group = "${scaleway_security_group.http.id}"
+
+  action    = "accept"
+  direction = "inbound"
+  ip_range  = "0.0.0.0/0"
+  protocol  = "TCP"
+  port      = 2379
+}
+
+data "scaleway_image" "ubuntu" {
+  architecture = "x86_64"
+  name         = "Ubuntu Mini Xenial 25G"
+}
+
+{{ $nodeCount := .NodeCounter -}}
+{{ $ipCount := .IpCounter -}}
+
+{{range .LoadBalancerNodes }}
+resource "scaleway_server" "node-{{ $nodeCount | printf "%.2d" }}" {
+  name           = "node-{{ $nodeCount |  printf "%.2d" }}"
+  tags           =  {{ template "tags" . }}
+  image          = "${data.scaleway_image.ubuntu.id}"
+  type           = "{{ .Type }}"
+  state          = "{{ .State }}"
+  security_group = "${scaleway_security_group.http.id}"
+  public_ip      = "${scaleway_ip.public_ip.{{ $ipCount }}.ip}"
+}
+{{ $nodeCount := incnode -}}
+{{ $ipCount := incip -}}
+{{ end -}}
+
+{{ range .KubeMasterNodes }}
+resource "scaleway_server" "node-{{  $nodeCount |  printf "%.2d" }}" {
+  name           = "node-{{  $nodeCount |  printf "%.2d" }}"
+  tags           = {{ template "tags" . }}
+  image          = "${data.scaleway_image.ubuntu.id}"
+  type           = "{{ .Type }}"
+  state          = "{{ .State }}"
+  security_group = "${scaleway_security_group.http.id}"
+  public_ip      = "${scaleway_ip.public_ip.{{ $ipCount }}.ip}"
+}
+{{  $nodeCount := incnode -}}
+{{  $ipCount := incip -}}
+{{ end -}}
+
+{{range .KubeWorkerNodes }}
+resource "scaleway_server" "node-{{  $nodeCount |  printf "%.2d" }}" {
+  name           = "node-{{  $nodeCount |  printf "%.2d" }}"
+  tags           = {{ template "tags" . }}
+  image          = "${data.scaleway_image.ubuntu.id}"
+  type           = "{{ .Type }}"
+  state          = "{{ .State }}"
+  security_group = "${scaleway_security_group.http.id}"
+  public_ip      = "${scaleway_ip.public_ip.{{ $ipCount }}.ip}"
+}
+{{  $nodeCount := incnode -}}
+{{  $ipCount := incip -}}
+{{ end -}}
+
+{{range .EtcdNodes }}
+resource "scaleway_server" "node-{{  $nodeCount |  printf "%.2d" }}" {
+  name           = "node-{{  $nodeCount |  printf "%.2d" }}"
+  tags           = {{ template "tags" . }}
+  image          = "${data.scaleway_image.ubuntu.id}"
+  type           = "{{ .Type }}"
+  state          = "{{ .State }}"
+  security_group = "${scaleway_security_group.http.id}"
+  public_ip      = "${scaleway_ip.public_ip.{{ $ipCount }}.ip}"
+}
+{{  $nodeCount := incnode -}}
+{{  $ipCount := incip -}}
+{{ end -}}
