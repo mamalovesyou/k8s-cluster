@@ -1,5 +1,4 @@
 {{define "tags"}}[{{- range $i, $e := .Tags }}{{if $i}}, {{end}}"{{$e}}"{{end}}]{{end -}}
-
 provider "scaleway" {
   organization = "${var.organisation_id}"
   token        = "${var.secret_token}"

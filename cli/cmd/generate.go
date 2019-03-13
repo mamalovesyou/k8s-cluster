@@ -7,6 +7,7 @@ import (
 
 var Destination string
 var ClusterName string
+var Region string
 
 var NumberOfLb int
 var NumberOfEtcd int
@@ -23,6 +24,7 @@ func init() {
 
 	generateCmd.Flags().StringVarP(&Destination, "output", "o", "./", "Output directory.")
 	generateCmd.Flags().StringVarP(&ClusterName, "name", "n", "mycluster", "Name of the cluster")
+	generateCmd.Flags().StringVarP(&Region, "region", "r", "par1", "The provider region")
 
 	generateCmd.Flags().IntVarP(&NumberOfLb, "load-balancer", "", 2, "Number of load balancer nodes")
 	generateCmd.Flags().IntVarP(&NumberOfEtcd, "etcd", "", 3, "Number of etcd nodes")
@@ -48,6 +50,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		clusterConfig := &generator.ClusterConfig{
+			Region:             Region,
 			ClusterName:        ClusterName,
 			LbInstanceType:     LBInstanceType,
 			EtcdInstanceType:   EtcdInstanceType,
@@ -61,5 +64,6 @@ var generateCmd = &cobra.Command{
 		}
 		terraformConfig := generator.NewTerraformConfig(clusterConfig, Destination)
 		generator.HydrateTerraformCluster(terraformConfig)
+		generator.HydrateTerraformVariables(terraformConfig)
 	},
 }

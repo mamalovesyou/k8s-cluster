@@ -125,3 +125,7 @@ func (c *TerraformConfig) IncrementNodeCounter() int {
 func (c *TerraformConfig) ClusterFilePath() string {
 	return path.Join(c.DestinationPath, c.ClusterName, "terraform", c.ClusterName+".tf")
 }
+
+func (c *TerraformConfig) VariablesFilePath() string {
+	return path.Join(c.DestinationPath, c.ClusterName, "terraform", "variables.tf")
+}

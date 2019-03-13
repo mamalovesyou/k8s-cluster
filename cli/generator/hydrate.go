@@ -10,8 +10,10 @@ import (
 	"strings"
 )
 
-const clusterTmplFile = "./templates/cluster.tf.tmpl"
-const variablesFile = "./template/variables.tf.tmpl"
+const (
+	clusterTmplFile   = "./templates/cluster.tf.tmpl"
+	variablesTmplFile = "./templates/variables.tf.tmpl"
+)
 
 func stringListFormat(list []string) string {
 	return fmt.Sprintf(`[ "%s" ]`, strings.Join(list[:], `", "`))
@@ -35,7 +37,7 @@ func HydrateTerraformCluster(config *TerraformConfig) {
 	// Create cluster file
 	f, err := os.Create(config.ClusterFilePath())
 	if err != nil {
-		log.Fatalln("Fail to create terraform file: ", err)
+		log.Fatalln("Fail to create terraform cluster file: ", err)
 	}
 
 	err = t.Execute(f, config)
@@ -43,5 +45,22 @@ func HydrateTerraformCluster(config *TerraformConfig) {
 		log.Fatalln("Execute: ", err)
 	}
 	f.Close()
-	log.Print("Sucessfully created terraform files")
+	log.Print("Sucessfully created terraform cluster files")
+}
+
+func HydrateTerraformVariables(config *TerraformConfig) {
+	t := template.Must(template.New(path.Base(variablesTmplFile)).ParseFiles(variablesTmplFile))
+
+	// Create cluster file
+	f, err := os.Create(config.VariablesFilePath())
+	if err != nil {
+		log.Fatalln("Fail to create terraform variables file: ", err)
+	}
+
+	err = t.Execute(f, config)
+	if err != nil {
+		log.Fatalln("Execute: ", err)
+	}
+	f.Close()
+	log.Print("Sucessfully created terraform variables files")
 }
