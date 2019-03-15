@@ -6,16 +6,59 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 )
 
 const (
-	templatesDir      = "../templates"
-	clusterTmplFile   = "cluster.tf.tmpl"
-	variablesTmplFile = "variables.tf.tmpl"
-	hostsTmplFile     = "hosts.ini.tmpl"
+	templatesDir             = "templates"
+	clusterTmplFile          = "cluster.tf.tmpl"
+	variablesTmplFile        = "variables.tf.tmpl"
+	hostsTmplFile            = "hosts.ini.tmpl"
+	initialTmplFile          = "initial.yml.tmpl"
+	kubeDependenciesTmplFile = "kube-dependencies.yml.tmpl"
+	kubeClusterTmplFile      = "kube-cluster.yml.tmpl"
 )
+
+type Hydrator struct {
+	TemplatesDir string
+	Templates    map[string]*template.Template
+}
+
+func (h *Hydrator) LoadTemplates() {
+
+	if h.Templates == nil {
+		h.Templates = make(map[string]*template.Template)
+	}
+
+	layoutFiles, err := filepath.Glob(h.TemplatesDir + "*.tmpl")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	includeFiles, err := filepath.Glob(h.TemplatesDir + "*.tmpl")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mainTemplate := template.New("main")
+
+	mainTemplate, err = mainTemplate.Parse(mainTmpl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range includeFiles {
+		fileName := filepath.Base(file)
+		files := append(layoutFiles, file)
+		templates[fileName], err = mainTemplate.Clone()
+		if err != nil {
+			log.Fatal(err)
+		}
+		templates[fileName] = template.Must(templates[fileName].ParseFiles(files...))
+	}
+	log.Println("Templates successfully loaded")
+}
 
 func templatePath(name string) string {
 	cwd, _ := os.Getwd()
@@ -40,7 +83,7 @@ func HydrateTerraformCluster(config *TerraformConfig) {
 	}
 
 	filePath := templatePath(clusterTmplFile)
-	t := template.Must(template.New(path.Base(filePath)).Funcs(funcMap).ParseFiles(filePath))
+	t := template.Must(templates.Funcs(funcMap).ParseFiles(filePath))
 
 	// Create cluster file
 	f, err := os.Create(config.ClusterFilePath())
@@ -92,4 +135,30 @@ func HydrateHosts(config *HostsConfig) {
 	}
 	f.Close()
 	log.Print("Sucessfully created hosts file")
+}
+
+func HydratePlaybooks(config *PlaybooksConfig) {
+	playbooks := map[string]string{
+		initialTmplFile:          "initial.yml",
+		kubeClusterTmplFile:      "kube-cluster.yml",
+		kubeDependenciesTmplFile: "kube-dependencies.yml",
+	}
+
+	for tmpl, fileName := range playbooks {
+
+		filePath := templatePath(tmpl)
+		t := template.Must(template.New(path.Base(filePath)).ParseFiles(filePath))
+
+		f, err := os.Create(path.Join(config.DeploymentsPath, fileName))
+		if err != nil {
+			log.Fatalln("Fail to create playbook: ", err)
+		}
+
+		err = t.Execute(f, config)
+		if err != nil {
+			log.Fatalln("Execute: ", err)
+		}
+		f.Close()
+		log.Printf("Sucessfully created playbook %s", fileName)
+	}
 }

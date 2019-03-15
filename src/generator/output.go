@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	terraformDir   = "terraform"
-	playbookDir    = "playbooks"
-	deploymentsDir = "deployments"
-	confDir        = "config"
+	terraformDir       = "terraform"
+	ansibleDir         = "ansible"
+	ansibleGroupVarDir = "ansible/group_vars"
+	deploymentsDir     = "deployments"
 )
 
 // Create a path directory if not exist
@@ -30,10 +30,13 @@ func CreateAllDirs(destination string, clusterName string) error {
 	if err := createDir(path.Join(clusterDir, terraformDir)); err != nil {
 		return err
 	}
-	if err := createDir(path.Join(clusterDir, playbookDir)); err != nil {
+	if err := createDir(path.Join(clusterDir, ansibleDir)); err != nil {
 		return err
 	}
-	if err := createDir(path.Join(clusterDir, confDir)); err != nil {
+	if err := createDir(path.Join(clusterDir, ansibleGroupVarDir)); err != nil {
+		return err
+	}
+	if err := createDir(path.Join(clusterDir, deploymentsDir)); err != nil {
 		return err
 	}
 	return nil

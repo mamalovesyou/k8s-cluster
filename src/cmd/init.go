@@ -9,6 +9,9 @@ var Destination string
 var ClusterName string
 var Region string
 
+var KubeRelease string
+var SSHKeyPath string
+
 var NumberOfLb int
 var NumberOfEtcd int
 var NumberOfMasters int
@@ -25,6 +28,9 @@ func init() {
 	generateCmd.Flags().StringVarP(&Destination, "output", "o", "./", "Output directory.")
 	generateCmd.Flags().StringVarP(&ClusterName, "name", "n", "mycluster", "Name of the cluster")
 	generateCmd.Flags().StringVarP(&Region, "region", "r", "par1", "The provider region")
+
+	generateCmd.Flags().StringVarP(&KubeRelease, "kube-release", "", "1.13.4", "Kubernetes release version")
+	generateCmd.Flags().StringVarP(&SSHKeyPath, "ssh-key", "", "~/.ssh/id_rsa", "Path to the ssh-key")
 
 	generateCmd.Flags().IntVarP(&NumberOfLb, "load-balancer", "", 2, "Number of load balancer nodes")
 	generateCmd.Flags().IntVarP(&NumberOfEtcd, "etcd", "", 3, "Number of etcd nodes")
@@ -65,5 +71,8 @@ var generateCmd = &cobra.Command{
 		terraformConfig := generator.NewTerraformConfig(clusterConfig, Destination)
 		generator.HydrateTerraformCluster(terraformConfig)
 		generator.HydrateTerraformVariables(terraformConfig)
+
+		playbooksConfig := generator.NewPlaybooksConfig(Destination, SSHKeyPath, KubeRelease)
+		generator.HydratePlaybooks(playbooksConfig)
 	},
 }

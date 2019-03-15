@@ -142,3 +142,19 @@ type HostsConfig struct {
 func (c *HostsConfig) HostsFilePath() string {
 	return path.Join("./playbooks", "hosts.ini")
 }
+
+type PlaybooksConfig struct {
+	SSHKeyPath      string
+	DeploymentsPath string
+	PlaybooksPath   string
+	KubeRelease     string
+}
+
+func NewPlaybooksConfig(rootDir, sshPath, kubeRelease string) *PlaybooksConfig {
+	return &PlaybooksConfig{
+		SSHKeyPath:      sshPath,
+		PlaybooksPath:   path.Join(rootDir, ansibleDir),
+		DeploymentsPath: path.Join(rootDir, deploymentsDir),
+		KubeRelease:     kubeRelease,
+	}
+}
