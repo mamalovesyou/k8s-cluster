@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	terraformDir = "terraform"
-	playbookDir  = "playbooks"
-	confDir      = "conf"
+	terraformDir   = "terraform"
+	playbookDir    = "playbooks"
+	deploymentsDir = "deployments"
+	confDir        = "config"
 )
 
 // Create a path directory if not exist

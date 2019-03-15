@@ -11,9 +11,16 @@ import (
 )
 
 const (
-	clusterTmplFile   = "./templates/cluster.tf.tmpl"
-	variablesTmplFile = "./templates/variables.tf.tmpl"
+	templatesDir      = "../templates"
+	clusterTmplFile   = "cluster.tf.tmpl"
+	variablesTmplFile = "variables.tf.tmpl"
+	hostsTmplFile     = "hosts.ini.tmpl"
 )
+
+func templatePath(name string) string {
+	cwd, _ := os.Getwd()
+	return path.Join(cwd, templatesDir, name)
+}
 
 func stringListFormat(list []string) string {
 	return fmt.Sprintf(`[ "%s" ]`, strings.Join(list[:], `", "`))
@@ -32,7 +39,8 @@ func HydrateTerraformCluster(config *TerraformConfig) {
 		"last":       isLast,
 	}
 
-	t := template.Must(template.New(path.Base(clusterTmplFile)).Funcs(funcMap).ParseFiles(clusterTmplFile))
+	filePath := templatePath(clusterTmplFile)
+	t := template.Must(template.New(path.Base(filePath)).Funcs(funcMap).ParseFiles(filePath))
 
 	// Create cluster file
 	f, err := os.Create(config.ClusterFilePath())
@@ -49,7 +57,9 @@ func HydrateTerraformCluster(config *TerraformConfig) {
 }
 
 func HydrateTerraformVariables(config *TerraformConfig) {
-	t := template.Must(template.New(path.Base(variablesTmplFile)).ParseFiles(variablesTmplFile))
+
+	filePath := templatePath(variablesTmplFile)
+	t := template.Must(template.New(path.Base(filePath)).ParseFiles(filePath))
 
 	// Create cluster file
 	f, err := os.Create(config.VariablesFilePath())
@@ -63,4 +73,23 @@ func HydrateTerraformVariables(config *TerraformConfig) {
 	}
 	f.Close()
 	log.Print("Sucessfully created terraform variables files")
+}
+
+func HydrateHosts(config *HostsConfig) {
+
+	filePath := templatePath(hostsTmplFile)
+	t := template.Must(template.New(path.Base(filePath)).ParseFiles(filePath))
+
+	// Create cluster file
+	f, err := os.Create(config.HostsFilePath())
+	if err != nil {
+		log.Fatalln("Fail to create hosts file: ", err)
+	}
+
+	err = t.Execute(f, config)
+	if err != nil {
+		log.Fatalln("Execute: ", err)
+	}
+	f.Close()
+	log.Print("Sucessfully created hosts file")
 }

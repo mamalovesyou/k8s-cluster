@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/matthieuberger/k8s-cluster/cli/generator"
+	"github.com/matthieuberger/k8s-cluster/src/generator"
 	"github.com/spf13/cobra"
 )
 

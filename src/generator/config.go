@@ -1,6 +1,10 @@
 package generator
 
-import "path"
+import (
+	"path"
+
+	"github.com/matthieuberger/k8s-cluster/src/parser"
+)
 
 // the instance struct
 type Instance struct {
@@ -128,4 +132,13 @@ func (c *TerraformConfig) ClusterFilePath() string {
 
 func (c *TerraformConfig) VariablesFilePath() string {
 	return path.Join(c.DestinationPath, c.ClusterName, "terraform", "variables.tf")
+}
+
+type HostsConfig struct {
+	Hosts []parser.ScalewayServer
+	Tags  map[string][]string
+}
+
+func (c *HostsConfig) HostsFilePath() string {
+	return path.Join("./playbooks", "hosts.ini")
 }

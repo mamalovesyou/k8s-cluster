@@ -1,0 +1,12 @@
+# Generated Hosts file
+[all]
+{{- range $h := .Hosts}}
+{{ $h.Name}} ansible_host={{$h.PublicIp}}
+{{- end}}
+
+{{range $tag, $hosts := .Tags}}
+[{{$tag}}]
+{{- range $h := $hosts}}
+{{$h}}
+{{- end}}
+{{end}}

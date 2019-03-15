@@ -6,7 +6,7 @@ GOFILES=$(wildcard $(GOSRC)/*.go)
 GONAME=$(shell basename "$(PWD)")
 
 build:
-	mkdir $(GOBASE)/bin
+	mkdir -p $(GOBASE)/bin
 	@echo "Building $(GOFILES) to $(GOBASE)/bin"
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go build -o $(GOBIN)/$(GONAME) $(GOFILES)
 
